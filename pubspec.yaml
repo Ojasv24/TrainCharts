@@ -39,6 +39,7 @@ dependencies:
   syncfusion_flutter_pdf: ^19.3.46-beta
   open_file: ^3.2.1
   path_provider: ^2.0.5
+  dropdown_search: ^5.0.5
 
 dev_dependencies:
   flutter_test:

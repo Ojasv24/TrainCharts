@@ -10,8 +10,14 @@ class SeatListWidget extends StatelessWidget {
     return ListView.builder(
       itemCount: berthInfo.length,
       itemBuilder: (context, index) {
-        final currentBerthInfo = berthInfo[index];
+        var currentBerthInfo = berthInfo[index];
         final occupancyInfo = currentBerthInfo.bsd;
+        if (currentBerthInfo.berthCode == 'P') {
+          currentBerthInfo.berthCode = "SU";
+        }
+        if (currentBerthInfo.berthCode == 'R') {
+          currentBerthInfo.berthCode = "SL";
+        }
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
           child: Card(

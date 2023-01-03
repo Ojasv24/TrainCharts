@@ -13,7 +13,15 @@ class SeatList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Seats'),
+        title: Row(
+          children: [
+            const Icon(Icons.airline_seat_recline_normal_rounded),
+            const SizedBox(
+              width: 6,
+            ),
+            Text(info.coach + " Coach"),
+          ],
+        ),
         elevation: 1,
       ),
       body: info.isComplete()
@@ -33,9 +41,11 @@ class SeatList extends StatelessWidget {
                   );
                 }
                 if (snapshot.hasData) {
+                  print(info.toJson());
                   final body = snapshot.data!.body;
                   final coachInfo = CoachInfo.fromJson(body);
                   final berthInfo = coachInfo.bdd;
+                  print(berthInfo.length);
                   if (berthInfo.isEmpty) {
                     return const InvalidDataWidget(
                       invalidMessage: 'Invalid Data',

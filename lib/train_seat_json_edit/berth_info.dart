@@ -7,7 +7,7 @@ import 'occupancy_info.dart';
 class BerthInfo {
   final String? cabinCoupe;
   final String cabinCoupeNameNo;
-  final String berthCode;
+  String berthCode;
   final int berthNo;
   final String from;
   final String to;
@@ -61,18 +61,16 @@ class BerthInfo {
   factory BerthInfo.fromJson(String source) =>
       BerthInfo.fromMap(json.decode(source));
 
-
-
   @override
   int get hashCode {
     return cabinCoupe.hashCode ^
-      cabinCoupeNameNo.hashCode ^
-      berthCode.hashCode ^
-      berthNo.hashCode ^
-      from.hashCode ^
-      to.hashCode ^
-      bsd.hashCode ^
-      quotaCntStn.hashCode ^
-      enable.hashCode;
+        cabinCoupeNameNo.hashCode ^
+        berthCode.hashCode ^
+        berthNo.hashCode ^
+        from.hashCode ^
+        to.hashCode ^
+        bsd.hashCode ^
+        quotaCntStn.hashCode ^
+        enable.hashCode;
   }
 }

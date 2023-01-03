@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:train_charts/info.dart';
-import 'package:train_charts/pages/seat_list.dart';
+import 'package:train_charts/api/coach_list_info.dart';
+import 'package:train_charts/api/search_train.dart';
+import 'package:train_charts/pages/coach_list.dart';
 
 class SelectTrain extends StatefulWidget {
   const SelectTrain({Key? key}) : super(key: key);
@@ -13,11 +14,11 @@ class _SelectTrainState extends State<SelectTrain> {
   DateTime selectedDate = DateTime.now();
   final _trainNumberController = TextEditingController();
   final _dateController = TextEditingController();
-  final _boardingStationCodeController = TextEditingController();
-  final _chartingStationController = TextEditingController();
-  final _sourceStationCodeController = TextEditingController();
-  final _coachController = TextEditingController();
-  final _classController = TextEditingController();
+  var _sourceStation = '';
+  List<Station> stationList = [];
+  // ignore: prefer_typing_uninitialized_variables
+  var _boardingStation = '';
+  var _validTrain = true;
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -41,11 +42,21 @@ class _SelectTrainState extends State<SelectTrain> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Choose Train"),
+        title: Row(
+          children: const [
+            Icon(Icons.train_rounded),
+            SizedBox(
+              width: 6,
+            ),
+            Text("Choose Train"),
+          ],
+        ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ListView(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          // crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const SizedBox(
               height: 8,
@@ -53,10 +64,29 @@ class _SelectTrainState extends State<SelectTrain> {
             TextField(
               keyboardType: TextInputType.number,
               controller: _trainNumberController,
-              decoration: const InputDecoration(
-                label: Text('Train Number'),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                label: const Text('Train Number'),
+                border: const OutlineInputBorder(),
+                errorText: !_validTrain ? 'Invalid Train Number' : null,
               ),
+              onChanged: (value) async {
+                if (value.length == 5) {
+                  try {
+                    final x = await searchTrain(_trainNumberController.text);
+
+                    setState(() {
+                      _validTrain = true;
+                      stationList = x;
+                      _boardingStation = stationList.first.stationCode;
+                    });
+                  } catch (e) {
+                    setState(() {
+                      _validTrain = false;
+                      stationList = [];
+                    });
+                  }
+                }
+              },
             ),
             const SizedBox(
               height: 12,
@@ -75,84 +105,69 @@ class _SelectTrainState extends State<SelectTrain> {
             const SizedBox(
               height: 12,
             ),
-            TextField(
-              textCapitalization: TextCapitalization.characters,
-              controller: _boardingStationCodeController,
-              decoration: const InputDecoration(
-                label: Text('Boarding station code'),
-                border: OutlineInputBorder(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(10)),
+              child: DropdownButton(
+                menuMaxHeight: 400,
+                focusColor: Colors.grey,
+                hint: const Text("Boarding Station"),
+                value: stationList.isEmpty ? null : _boardingStation,
+                // icon: const Icon(Icons.arrow_downward),
+                isExpanded: true,
+
+                // elevation: 16,
+                items: stationList.map<DropdownMenuItem<String>>((value) {
+                  return DropdownMenuItem<String>(
+                    value: value.stationCode,
+                    child: Text("${value.stationName} (${value.stationCode})"),
+                  );
+                }).toList(),
+                onChanged: (String? value) {
+                  setState(() {
+                    _boardingStation = value!;
+                  });
+                },
+                // icon: Icon(Icons.arrow_drop_down),
+                // iconSize: 10,
+                underline: const SizedBox(),
               ),
             ),
-            const SizedBox(
-              height: 12,
-            ),
-            TextField(
-              textCapitalization: TextCapitalization.characters,
-              controller: _chartingStationController,
-              decoration: const InputDecoration(
-                label: Text('Charting Station'),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            TextField(
-              textCapitalization: TextCapitalization.characters,
-              controller: _sourceStationCodeController,
-              decoration: const InputDecoration(
-                label: Text('Source station code'),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            TextField(
-              textCapitalization: TextCapitalization.characters,
-              controller: _coachController,
-              decoration: const InputDecoration(
-                label: Text('Coach'),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            TextField(
-              textCapitalization: TextCapitalization.characters,
-              controller: _classController,
-              decoration: const InputDecoration(
-                label: Text('Class'),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
+            Center(
+                child: ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        final x = await getCoachlist(_boardingStation,
+                            selectedDate, _trainNumberController.text);
+                        for (Station s in stationList) {
+                          if (x.boardingStation == s.stationCode) {
+                            x.boardingStationName = s.stationName;
+                          }
+                          if (x.chartingStation == s.stationCode) {
+                            x.chartingStationName = s.stationName;
+                          }
+                          if (x.trainSourceStation == s.stationCode) {
+                            x.trainSourceStationName = s.stationName;
+                          }
+                        }
+
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => CoachList(
+                                      coachInfo: x,
+                                    )));
+                      } catch (e) {
+                        final snackBar = SnackBar(
+                          content: Text(e.toString()),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                      }
+                    },
+                    child: const Text('Get Train Charts')))
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => SeatList(
-                      info: Info(
-                        trainNumber: _trainNumberController.text,
-                        boardingStationCode:
-                            _boardingStationCodeController.text,
-                        chartingStation: _chartingStationController.text,
-                        coach: _coachController.text,
-                        coachClass: _classController.text,
-                        date: selectedDate,
-                        sourceStationCode: _sourceStationCodeController.text,
-                      ),
-                    )),
-          );
-        },
-        child: const Icon(Icons.arrow_right_alt_rounded),
       ),
     );
   }

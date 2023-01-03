@@ -27,11 +27,11 @@ class OccupancyInfo {
 
   factory OccupancyInfo.fromMap(Map<String, dynamic> map) {
     return OccupancyInfo(
-      splitNo: map['splitNo'],
-      from: map['from'],
-      to: map['to'],
-      quota: map['quota'],
-      occupancy: map['occupancy'],
+      splitNo: map['splitNo'] ?? "NULL",
+      from: map['from'] ?? "NULL",
+      to: map['to'] ?? "NULL",
+      quota: map['quota'] ?? "NULL",
+      occupancy: map['occupancy'] ?? "NULL",
     );
   }
 
